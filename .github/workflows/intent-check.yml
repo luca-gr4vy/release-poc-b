@@ -1,0 +1,34 @@
+name: intent-check
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  intent-check:
+    # The release PR deletes intents instead of adding them.
+    if: ${{ !startsWith(github.head_ref, 'changeset-release/') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # HEAD is the PR's merge commit, HEAD^1 the base branch.
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: Require an intent when a published package changes
+        run: |
+          changed=$(git diff --name-only HEAD^1 HEAD -- packages/core packages/react)
+          intents=$(git diff --name-only --diff-filter=A HEAD^1 HEAD -- '.changeset/*.md' ':!.changeset/README.md')
+          echo "Published files changed: ${changed:-none}"
+          echo "Intents added: ${intents:-none}"
+          if [ -n "$changed" ] && [ -z "$intents" ]; then
+            echo '::error::This PR changes a published package but adds no change intent. Run: pnpm change --bump <patch|minor|major|none> --summary "…" <package>'
+            exit 1
+          fi
+      - run: pnpm change check

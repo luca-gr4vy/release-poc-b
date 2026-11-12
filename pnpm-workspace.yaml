@@ -1,2 +1,7 @@
 packages:
   - packages/*
+versioning:
+  fixed:
+    - ['@luca-gr4vy/release-poc-b', '@luca-gr4vy/release-poc-b-react']
+  changelog:
+    storage: repository
