@@ -88,3 +88,12 @@ Scratch workspace, no CI:
 
 - The user approved core, then react, on npmjs.com with 2FA.
 - `npm view @luca-gr4vy/release-poc-b-react@0.1.0 dependencies dist-tags` → `{"@luca-gr4vy/release-poc-b":"^0.1.0"}`, `latest: 0.1.0`. Core: `latest: 0.1.0`.
+
+## B: a none-only intent (2026-11-12)
+
+- #4 `chore(core): add comment` changes `packages/core/index.js` and adds only `.changeset/new-results-stick.md` (`"@luca-gr4vy/release-poc-b": none`). Local `pnpm change status`: `No pending changes.` `intent-check` passed (a none intent counts as an intent).
+- Merged #4 at 10:35:03Z → `282d91a`. Run 43201653861, `release-pr`: `pnpm version -r` → `No pending changes. Record one with "pnpm change".`, then `Creating pull request` → #5 `chore: release`.
+- #5's only change: `.changeset/new-results-stick.md` deleted (+0 −5). No version bump, no `ledger.yaml` change. Its body is the template with an empty `# Releases` list.
+- #5's `ci` and `intent-check` runs were `action_required`. `gh api -X POST repos/luca-gr4vy/release-poc-b/actions/runs/<id>/approve` started both (no close and reopen). `ci`, `scan` passed; `intent-check` skipped.
+- Merged #5 at 10:36:45Z → `9a0b296`. Run 43201909508: `release-pr` → `No changesets present…`; `decide` → `No release: core is still at 0.1.0, so this is not a release commit`. No new tag (only `v0.1.0`), no open PRs.
+- So a none-only intent costs one extra PR, which a person has to merge to clear the intent.
