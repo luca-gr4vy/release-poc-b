@@ -1,0 +1,6 @@
+{
+  "name": "@luca-gr4vy/release-poc-b-internal",
+  "private": true,
+  "type": "module",
+  "main": "index.js"
+}
