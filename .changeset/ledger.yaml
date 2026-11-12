@@ -1,0 +1,8 @@
+"@luca-gr4vy/release-poc-b-react@0.1.0":
+  dir: packages/react
+  intents:
+    - silver-sides-tell
+"@luca-gr4vy/release-poc-b@0.1.0":
+  dir: packages/core
+  intents:
+    - smart-glasses-give
