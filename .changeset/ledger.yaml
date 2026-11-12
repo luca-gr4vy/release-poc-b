@@ -10,3 +10,7 @@
   dir: packages/core
   intents:
     - rich-readers-march
+"@luca-gr4vy/release-poc-b@0.2.1":
+  dir: packages/core
+  intents:
+    - spotty-buckets-throw
