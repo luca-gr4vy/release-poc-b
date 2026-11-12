@@ -97,3 +97,25 @@ Scratch workspace, no CI:
 - #5's `ci` and `intent-check` runs were `action_required`. `gh api -X POST repos/luca-gr4vy/release-poc-b/actions/runs/<id>/approve` started both (no close and reopen). `ci`, `scan` passed; `intent-check` skipped.
 - Merged #5 at 10:36:45Z → `9a0b296`. Run 43201909508: `release-pr` → `No changesets present…`; `decide` → `No release: core is still at 0.1.0, so this is not a release commit`. No new tag (only `v0.1.0`), no open PRs.
 - So a none-only intent costs one extra PR, which a person has to merge to clear the intent.
+
+## B: race, an intent merged just before the release PR (2026-11-12)
+
+- Merged #6 `feat(core): add whisper` (core minor intent) → release PR #7 `chore: release` at `0.2.0`, listing only whisper. Started #7's runs with the approve API.
+- Opened #8 `fix(core): add echo` (core patch intent `spotty-buckets-throw`). With both green, merged #8 at 10:40:20Z (`d56ebca`) and #7 at 10:40:23Z (`ee44016`), 3 s apart.
+- #8's run (43202424358) ran first:
+  - `release-pr`: the main-HEAD guard skipped the action: `main is at ee44016…, not d56ebca…; leaving the release PR alone`. No stale release PR.
+  - `decide`: `No release: core is still at 0.1.0, so this is not a release commit`.
+- #7's run (43202431795):
+  - `release-pack` / `release-stage`: `Release (core 0.1.0 → 0.2.0)`, both staged at `0.2.0` (7.2 s, 6.0 s), tag `v0.2.0` → `ee44016`, immutable Release, comment on #7 at 10:41:53Z.
+  - `release-pr`: `pnpm version -r` → `0.2.0 → 0.2.1` for both, `Creating pull request` → #9 `chore: release` at `0.2.1`, listing `- Add echo` under core's `### Patch Changes`.
+- Result:
+  - The `0.2.0` tarball contains `echo`, because `packages/core/index.js` at `v0.2.0` has it.
+  - The `0.2.0` changelog and Release notes list only whisper. echo's intent was still pending at `v0.2.0` (`.changeset/spotty-buckets-throw.md` is in that tree).
+  - #9 lists echo under `0.2.1`. So unlike A, the change isn't lost from the changelog, but it's listed one version late. A `major` intent merged this way would be applied one release late too.
+  - React's `## 0.2.1` section in #9 is empty: a core-only patch gives react no "Updated dependencies" entry here, though core's minor in `0.2.0` did.
+- The same mitigations as A apply (require up-to-date branches, or a merge queue), untested.
+- The user approved `0.2.0` (both packages). `npm view @luca-gr4vy/release-poc-b-react@0.2.0 dependencies dist-tags` → `^0.2.0`, `latest: 0.2.0`. Core: `latest: 0.2.0`.
+- Started #9's runs with the approve API, then merged #9 at 10:51:19Z → `2947fe6`. Run 43204024710:
+  - `release-pr`: `No changesets present…`. No new release PR.
+  - `decide`: `Release (core 0.2.0 → 0.2.1)`. Both staged at `0.2.1` (5.5 s, 4.3 s). Tag `v0.2.1` → `2947fe6`, immutable Release with only core's section (`### Patch Changes` / `- Add echo`), since react's is empty. Comment on #9 at 10:52:21Z.
+  - `git diff --stat v0.2.0 v0.2.1 -- packages`: only the two `CHANGELOG.md` and two `package.json` files. `0.2.1` is a changelog-only release: the race's cost on B.
