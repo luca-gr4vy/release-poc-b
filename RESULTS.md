@@ -119,3 +119,12 @@ Scratch workspace, no CI:
   - `release-pr`: `No changesets present…`. No new release PR.
   - `decide`: `Release (core 0.2.0 → 0.2.1)`. Both staged at `0.2.1` (5.5 s, 4.3 s). Tag `v0.2.1` → `2947fe6`, immutable Release with only core's section (`### Patch Changes` / `- Add echo`), since react's is empty. Comment on #9 at 10:52:21Z.
   - `git diff --stat v0.2.0 v0.2.1 -- packages`: only the two `CHANGELOG.md` and two `package.json` files. `0.2.1` is a changelog-only release: the race's cost on B.
+
+## Review follow-ups (2026-11-16)
+
+#12 added two temporary jobs to `ci.yml`, and #13 removed them. Both packed core with `npm pack` and staged the tarball with npm CLI 11.21.2 on Node 22.23.4 (secure-fields' pin), under a throwaway prerelease and dist-tag.
+
+- **A stage from outside the `release` environment is refused.** A `pull_request` job on a branch, with `id-token: write` and no environment, ran `npm stage publish <tgz> --tag noenv` and got `npm error code ENEEDAUTH … This command requires you to be logged in` (run 43863136931). Nothing was staged.
+- **The npm CLI stages over OIDC, with no pnpm 11.** The same command from `main`, in the `release` environment: `+ @luca-gr4vy/release-poc-b@0.2.2-npmcli.0 (staged with id e7d9f1eb-58db-4c77-97c2-5c5e5b14ad96)`, tag `npmcli` (run 43863290599). So the refusal above came from the environment binding, not from the npm CLI skipping OIDC for `stage`.
+- npm printed a notice that tokens that bypass 2FA are being restricted for direct publishing.
+- `0.2.2-npmcli.0` stays staged until it's rejected on npmjs.com.
